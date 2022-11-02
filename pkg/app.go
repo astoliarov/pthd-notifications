@@ -19,7 +19,7 @@ func NewApplication() (*Application, error) {
 	if configErr != nil {
 		return nil, fmt.Errorf("failed to load config: %s", configErr)
 	}
-	settingsLoader := NewLoader("./settings.json")
+	settingsLoader := NewLoader(config.PathToSettings)
 
 	settings, loadErr := settingsLoader.Load()
 	if loadErr != nil {
