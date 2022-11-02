@@ -4,6 +4,8 @@ build:
 run:
 	./bin/api
 
+run-rebuild: build run
+
 docker/build:
 	docker buildx build -t bghji/pthd-notifications . --platform=linux/amd64
 

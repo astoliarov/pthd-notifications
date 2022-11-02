@@ -8,6 +8,7 @@ type Config struct {
 	TelegramToken string `required:"true"`
 	ApiPort       int    `default:"3030" required:"true"`
 	ApiHost       string `default:"0.0.0.0" required:"true"`
+	Debug         bool   `default:"false"`
 }
 
 func LoadConfig() (*Config, error) {

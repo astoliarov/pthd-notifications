@@ -5,7 +5,7 @@
 package mocks
 
 import (
-	entities "pthd-notifications/pkg/entities"
+	"pthd-notifications/pkg/domain/entities"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"

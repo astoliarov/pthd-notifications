@@ -134,3 +134,5 @@ Temporary Items
 teamkillbot.sqlite
 bin/*
 volumes/
+
+./settings.json

@@ -3,16 +3,18 @@ package connectors
 import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
-	"pthd-notifications/pkg/entities"
+	"pthd-notifications/pkg/domain/entities"
 )
 
-func InitBot(token string) (*tgbotapi.BotAPI, error) {
+func InitBot(token string, debug bool) (*tgbotapi.BotAPI, error) {
 	bot, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
 		return nil, err
 	}
 
-	bot.Debug = true
+	if debug {
+		bot.Debug = true
+	}
 
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
