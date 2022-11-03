@@ -1,6 +1,7 @@
 package api
 
 import (
+	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
@@ -43,6 +44,7 @@ func (handler *notificationHandler) Handle(c *gin.Context) {
 	sendErr := handler.service.SendNotification(params.DiscordId, params.toContext())
 	if sendErr != nil {
 		log.Println(sendErr)
+		sentrygin.GetHubFromContext(c).CaptureException(sendErr)
 		c.AbortWithStatusJSON(http.StatusInternalServerError,
 			gin.H{
 				"error": "Internal server error",

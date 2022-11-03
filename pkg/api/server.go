@@ -1,9 +1,17 @@
 package api
 
 import (
+	"context"
 	"fmt"
+	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-gonic/gin"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
 	"pthd-notifications/pkg/domain"
+	"syscall"
+	"time"
 )
 
 type Server struct {
@@ -21,8 +29,10 @@ func NewServer(host string, port int, service *domain.Service) *Server {
 	}
 }
 
-func (s *Server) Run() error {
+func (s *Server) prepareRouter() *gin.Engine {
 	r := gin.Default()
+	r.Use(sentrygin.New(sentrygin.Options{}))
+
 	r.GET("/healthcheck", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"status": "ok",
@@ -32,5 +42,40 @@ func (s *Server) Run() error {
 	notificationsHndlr := notificationHandler{service: s.service}
 	r.GET("/api/v1/notification", notificationsHndlr.Handle)
 
-	return r.Run(fmt.Sprintf("%s:%d", s.host, s.port))
+	return r
+}
+
+func (s *Server) Run(ctx context.Context) {
+	router := s.prepareRouter()
+
+	srv := &http.Server{
+		Addr:    fmt.Sprintf("%s:%d", s.host, s.port),
+		Handler: router,
+	}
+
+	go func() {
+		// service connections
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen: %s\n", err)
+		}
+	}()
+
+	quit := make(chan os.Signal)
+
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("Shutdown Server ...")
+
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatal("Server Shutdown:", err)
+	}
+	// catching ctx.Done(). timeout of 5 seconds.
+	select {
+	case <-ctx.Done():
+		log.Println("timeout of 5 seconds.")
+	}
+	log.Println("Server exiting")
+
 }

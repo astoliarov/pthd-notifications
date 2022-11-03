@@ -10,6 +10,7 @@ type Config struct {
 	ApiHost        string `default:"0.0.0.0" required:"true"`
 	PathToSettings string `default:"./settings.json"`
 	Debug          bool   `default:"false"`
+	SentryDSN      string
 }
 
 func LoadConfig() (*Config, error) {

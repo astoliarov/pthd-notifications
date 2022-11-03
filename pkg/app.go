@@ -7,6 +7,8 @@ import (
 	"pthd-notifications/pkg/api"
 	"pthd-notifications/pkg/connectors"
 	"pthd-notifications/pkg/domain"
+
+	"github.com/getsentry/sentry-go"
 )
 
 type Application struct {
@@ -19,8 +21,16 @@ func NewApplication() (*Application, error) {
 	if configErr != nil {
 		return nil, fmt.Errorf("failed to load config: %s", configErr)
 	}
-	settingsLoader := NewLoader(config.PathToSettings)
 
+	if config.SentryDSN != "" {
+		if sentryInitErr := sentry.Init(sentry.ClientOptions{
+			Dsn: config.SentryDSN,
+		}); sentryInitErr != nil {
+			return nil, fmt.Errorf("failed to initialize sentry: %s", configErr)
+		}
+	}
+
+	settingsLoader := NewLoader(config.PathToSettings)
 	settings, loadErr := settingsLoader.Load()
 	if loadErr != nil {
 		return nil, fmt.Errorf("failed to load settings: %s", loadErr)
@@ -46,5 +56,6 @@ func NewApplication() (*Application, error) {
 
 func (app *Application) Run(ctx context.Context) error {
 	log.Println("Starting application")
-	return app.server.Run()
+	app.server.Run(ctx)
+	return nil
 }
