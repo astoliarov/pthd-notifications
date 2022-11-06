@@ -15,21 +15,29 @@ import (
 )
 
 type Server struct {
-	host string
-	port int
+	host  string
+	port  int
+	debug bool
 
 	service *domain.Service
 }
 
-func NewServer(host string, port int, service *domain.Service) *Server {
+func NewServer(host string, port int, debug bool, service *domain.Service) *Server {
 	return &Server{
 		port:    port,
 		host:    host,
 		service: service,
+		debug:   debug,
 	}
 }
 
 func (s *Server) prepareRouter() *gin.Engine {
+	if s.debug {
+		gin.SetMode(gin.DebugMode)
+	} else {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
 	r := gin.Default()
 	r.Use(sentrygin.New(sentrygin.Options{}))
 

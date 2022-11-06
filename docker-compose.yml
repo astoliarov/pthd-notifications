@@ -1,0 +1,11 @@
+version: "3.9"
+services:
+  notifications:
+    build: .
+    volumes:
+      - ./settings.json:/pthd-notifications/settings.json
+    expose:
+      - '3030'
+    env_file:
+      - ./local.env
+    restart: unless-stopped

@@ -46,7 +46,7 @@ func NewApplication() (*Application, error) {
 	repository.Load(settings)
 
 	service := domain.NewService(repository, tgConnector)
-	server := api.NewServer(config.ApiHost, config.ApiPort, service)
+	server := api.NewServer(config.ApiHost, config.ApiPort, config.Debug, service)
 
 	return &Application{
 		service: service,

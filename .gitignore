@@ -136,3 +136,4 @@ bin/*
 volumes/
 
 ./settings.json
+./local.env
