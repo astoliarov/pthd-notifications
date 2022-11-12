@@ -1,7 +1,22 @@
 package model
 
-const UsersConnectedType = "users_connected"
-const UsersLeftChannelType = "users_left_channel"
+const NotificationTypeUsersConnected = "users_connected"
+const NotificationTypeUsersLeftChannel = "users_left_channel"
+
+var NotificationTypes = []string{
+	NotificationTypeUsersConnected,
+	NotificationTypeUsersLeftChannel,
+}
+
+func IsNotificationTypeSupported(nType string) bool {
+	for _, value := range NotificationTypes {
+		if value == nType {
+			return true
+		}
+	}
+
+	return false
+}
 
 type INotificationContext interface {
 	GetType() string
@@ -15,7 +30,7 @@ type UsersConnectedNotificationContext struct {
 }
 
 func (nc *UsersConnectedNotificationContext) GetType() string {
-	return UsersConnectedType
+	return NotificationTypeUsersConnected
 }
 
 func (nc *UsersConnectedNotificationContext) GetDiscordId() int64 {
@@ -27,7 +42,7 @@ type UsersLeftChannelNotificationContext struct {
 }
 
 func (nc *UsersLeftChannelNotificationContext) GetType() string {
-	return UsersLeftChannelType
+	return NotificationTypeUsersLeftChannel
 }
 
 func (nc *UsersLeftChannelNotificationContext) GetDiscordId() int64 {

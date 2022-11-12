@@ -47,14 +47,14 @@ func parseNotificationContext(c *gin.Context) (model.INotificationContext, error
 	}
 
 	switch params.Type {
-	case model.UsersConnectedType:
+	case model.NotificationTypeUsersConnected:
 		var params usersConnectedNotificationContext
 		bindErr := c.Bind(&params)
 		if bindErr != nil {
 			return nil, bindErr
 		}
 		return params.toContext(), nil
-	case model.UsersLeftChannelType:
+	case model.NotificationTypeUsersLeftChannel:
 		var params usersLeftChannelNotificationContext
 		bindErr := c.Bind(&params)
 		if bindErr != nil {

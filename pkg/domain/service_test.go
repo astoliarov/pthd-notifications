@@ -35,7 +35,7 @@ func (s *ServiceTestSuite) SetupTest() {
 
 func (s *ServiceTestSuite) Test_SendNotification_RepoErr_Err() {
 	discordId := int64(2)
-	nType := model.UsersConnectedType
+	nType := model.NotificationTypeUsersConnected
 	err := errors.New("test error")
 	ctx := model.UsersConnectedNotificationContext{
 		NamesJoined: "",
@@ -57,7 +57,7 @@ func (s *ServiceTestSuite) Test_SendNotification_NoConfig_Err() {
 		Names:       []string{},
 		Id:          discordId,
 	}
-	nType := model.UsersConnectedType
+	nType := model.NotificationTypeUsersConnected
 
 	s.repositoryMock.EXPECT().Get(discordId, nType).Return(nil, nil)
 
@@ -83,9 +83,9 @@ func (s *ServiceTestSuite) Test_SendNotification_CreateNotificationErr_Err() {
 		MessagesTemplates: []string{
 			"Let's battle. Already {{.NamesJoined in chat",
 		},
-		Type: model.UsersConnectedType,
+		Type: model.NotificationTypeUsersConnected,
 	}
-	nType := model.UsersConnectedType
+	nType := model.NotificationTypeUsersConnected
 
 	s.repositoryMock.EXPECT().Get(discordId, nType).Return(settings, nil)
 
@@ -107,9 +107,9 @@ func (s *ServiceTestSuite) Test_SendNotification_SendErr_Err() {
 		MessagesTemplates: []string{
 			"Let's battle. Already {{.NamesJoined}} in chat",
 		},
-		Type: model.UsersConnectedType,
+		Type: model.NotificationTypeUsersConnected,
 	}
-	nType := model.UsersConnectedType
+	nType := model.NotificationTypeUsersConnected
 	err := errors.New("test error")
 
 	s.repositoryMock.EXPECT().Get(discordId, nType).Return(settings, nil)
@@ -133,9 +133,9 @@ func (s *ServiceTestSuite) Test_SendNotification_NoErr_Nil() {
 		MessagesTemplates: []string{
 			"Let's battle. Already {{.NamesJoined}} in chat",
 		},
-		Type: model.UsersConnectedType,
+		Type: model.NotificationTypeUsersConnected,
 	}
-	nType := model.UsersConnectedType
+	nType := model.NotificationTypeUsersConnected
 
 	s.repositoryMock.EXPECT().Get(discordId, nType).Return(settings, nil)
 	s.connectorMock.EXPECT().Send(gomock.Any()).Return(nil)

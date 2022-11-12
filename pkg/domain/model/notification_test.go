@@ -39,7 +39,7 @@ func (s *NewNotificationTestSuite) Test__NoMessageInSettings__NoNotification() {
 		DiscordId:         2,
 		TelegramChatId:    2,
 		MessagesTemplates: []string{},
-		Type:              UsersConnectedType,
+		Type:              NotificationTypeUsersConnected,
 	}
 	context := &UsersConnectedNotificationContext{
 		Names:       []string{"КурочкаХлеба", "TiConcerto"},
@@ -54,7 +54,7 @@ func (s *NewNotificationTestSuite) Test__NoMessageInSettings__NoNotification() {
 
 	assert.Equal(s.T(), &ErrNoMessage{
 		DiscordId: 2,
-		Type:      UsersConnectedType,
+		Type:      NotificationTypeUsersConnected,
 	}, err)
 	assert.Nil(s.T(), notification)
 }
