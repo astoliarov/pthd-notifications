@@ -1,4 +1,4 @@
-name: Go package
+name: build-test
 
 on: [ push ]
 
