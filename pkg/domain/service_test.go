@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	_ "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"pthd-notifications/pkg/domain/entities"
+	"pthd-notifications/pkg/domain/model"
 	"pthd-notifications/tests/mocks"
 	"testing"
 )
@@ -35,80 +35,112 @@ func (s *ServiceTestSuite) SetupTest() {
 
 func (s *ServiceTestSuite) Test_SendNotification_RepoErr_Err() {
 	discordId := int64(2)
-	err := errors.New("Test error")
-	ctx := entities.NotificationContext{}
+	nType := model.NotificationTypeUsersConnected
+	err := errors.New("test error")
+	ctx := model.UsersConnectedNotificationContext{
+		NamesJoined: "",
+		Names:       []string{},
+		Id:          discordId,
+	}
 
-	s.repositoryMock.EXPECT().GetByDiscordId(discordId).Return(nil, err)
+	s.repositoryMock.EXPECT().Get(discordId, nType).Return(nil, err)
 
-	sendErr := s.service.SendNotification(discordId, &ctx)
+	sendErr := s.service.SendNotification(&ctx)
 
 	assert.Equal(s.T(), sendErr, err)
 }
 
 func (s *ServiceTestSuite) Test_SendNotification_NoConfig_Err() {
 	discordId := int64(2)
-	ctx := entities.NotificationContext{}
+	ctx := model.UsersConnectedNotificationContext{
+		NamesJoined: "",
+		Names:       []string{},
+		Id:          discordId,
+	}
+	nType := model.NotificationTypeUsersConnected
 
-	s.repositoryMock.EXPECT().GetByDiscordId(discordId).Return(nil, nil)
+	s.repositoryMock.EXPECT().Get(discordId, nType).Return(nil, nil)
 
-	sendErr := s.service.SendNotification(discordId, &ctx)
+	sendErr := s.service.SendNotification(&ctx)
 
-	assert.Nil(s.T(), sendErr)
+	assert.NotNil(s.T(), sendErr)
+	assert.Equal(s.T(), &ErrNoSettings{
+		DiscordId: discordId,
+		Type:      ctx.GetType(),
+	}, sendErr)
 }
 
 func (s *ServiceTestSuite) Test_SendNotification_CreateNotificationErr_Err() {
 	discordId := int64(2)
-	ctx := entities.NotificationContext{}
-	settings := &entities.NotificationSettings{
+	ctx := model.UsersConnectedNotificationContext{
+		NamesJoined: "",
+		Names:       []string{},
+		Id:          discordId,
+	}
+	settings := &model.NotificationSettings{
 		DiscordId:      1,
 		TelegramChatId: 2,
 		MessagesTemplates: []string{
 			"Let's battle. Already {{.NamesJoined in chat",
 		},
+		Type: model.NotificationTypeUsersConnected,
 	}
+	nType := model.NotificationTypeUsersConnected
 
-	s.repositoryMock.EXPECT().GetByDiscordId(discordId).Return(settings, nil)
+	s.repositoryMock.EXPECT().Get(discordId, nType).Return(settings, nil)
 
-	sendErr := s.service.SendNotification(discordId, &ctx)
+	sendErr := s.service.SendNotification(&ctx)
 
 	assert.NotNil(s.T(), sendErr)
 }
 
 func (s *ServiceTestSuite) Test_SendNotification_SendErr_Err() {
 	discordId := int64(2)
-	ctx := entities.NotificationContext{}
-	settings := &entities.NotificationSettings{
+	ctx := model.UsersConnectedNotificationContext{
+		NamesJoined: "",
+		Names:       []string{},
+		Id:          discordId,
+	}
+	settings := &model.NotificationSettings{
 		DiscordId:      1,
 		TelegramChatId: 2,
 		MessagesTemplates: []string{
 			"Let's battle. Already {{.NamesJoined}} in chat",
 		},
+		Type: model.NotificationTypeUsersConnected,
 	}
-	err := errors.New("Send error")
+	nType := model.NotificationTypeUsersConnected
+	err := errors.New("test error")
 
-	s.repositoryMock.EXPECT().GetByDiscordId(discordId).Return(settings, nil)
+	s.repositoryMock.EXPECT().Get(discordId, nType).Return(settings, nil)
 	s.connectorMock.EXPECT().Send(gomock.Any()).Return(err)
 
-	sendErr := s.service.SendNotification(discordId, &ctx)
+	sendErr := s.service.SendNotification(&ctx)
 
 	assert.Equal(s.T(), sendErr, err)
 }
 
 func (s *ServiceTestSuite) Test_SendNotification_NoErr_Nil() {
 	discordId := int64(2)
-	ctx := entities.NotificationContext{}
-	settings := &entities.NotificationSettings{
+	ctx := model.UsersConnectedNotificationContext{
+		NamesJoined: "",
+		Names:       []string{},
+		Id:          discordId,
+	}
+	settings := &model.NotificationSettings{
 		DiscordId:      1,
 		TelegramChatId: 2,
 		MessagesTemplates: []string{
 			"Let's battle. Already {{.NamesJoined}} in chat",
 		},
+		Type: model.NotificationTypeUsersConnected,
 	}
+	nType := model.NotificationTypeUsersConnected
 
-	s.repositoryMock.EXPECT().GetByDiscordId(discordId).Return(settings, nil)
+	s.repositoryMock.EXPECT().Get(discordId, nType).Return(settings, nil)
 	s.connectorMock.EXPECT().Send(gomock.Any()).Return(nil)
 
-	sendErr := s.service.SendNotification(discordId, &ctx)
+	sendErr := s.service.SendNotification(&ctx)
 
 	assert.Nil(s.T(), sendErr)
 }

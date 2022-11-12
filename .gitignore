@@ -135,5 +135,5 @@ teamkillbot.sqlite
 bin/*
 volumes/
 
-./settings.json
-./local.env
+settings.json
+local.env

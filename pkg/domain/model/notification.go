@@ -1,4 +1,4 @@
-package entities
+package model
 
 import (
 	"bytes"
@@ -15,6 +15,7 @@ type NotificationSettings struct {
 	DiscordId         int64
 	TelegramChatId    int64
 	MessagesTemplates []string
+	Type              string
 }
 
 func (ns *NotificationSettings) getRandomMessageTemplate() *string {
@@ -31,10 +32,10 @@ type Notification struct {
 	Message        string
 }
 
-func NewNotification(notificationContext *NotificationContext, settings *NotificationSettings) (*Notification, error) {
+func NewNotification(notificationContext INotificationContext, settings *NotificationSettings) (*Notification, error) {
 	messageTemplate := settings.getRandomMessageTemplate()
 	if messageTemplate == nil {
-		return nil, nil
+		return nil, NewErrNoSettingsFromContext(notificationContext)
 	}
 
 	tmpl, parseErr := template.New("").Parse(*messageTemplate)

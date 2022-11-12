@@ -2,22 +2,32 @@ package pkg
 
 import (
 	"encoding/json"
+	"errors"
+	"github.com/rs/zerolog/log"
 	"os"
-	"pthd-notifications/pkg/domain/entities"
+	"pthd-notifications/pkg/domain/model"
 )
 
 type NotificationSettingsModel struct {
 	DiscordId         int64    `json:"discord_id"`
 	TelegramChatId    int64    `json:"telegram_chat_id"`
 	MessagesTemplates []string `json:"messages_templates"`
+	Type              string   `json:"type"`
 }
 
-func (ns *NotificationSettingsModel) ToEntity() *entities.NotificationSettings {
-	return &entities.NotificationSettings{
+func (ns *NotificationSettingsModel) ToEntity() (*model.NotificationSettings, error) {
+	if !model.IsNotificationTypeSupported(ns.Type) {
+		return nil, errors.New(
+			"unsupported type",
+		)
+	}
+
+	return &model.NotificationSettings{
 		DiscordId:         ns.DiscordId,
 		TelegramChatId:    ns.TelegramChatId,
 		MessagesTemplates: ns.MessagesTemplates,
-	}
+		Type:              ns.Type,
+	}, nil
 }
 
 type NotificationSettingsFile struct {
@@ -34,7 +44,7 @@ func NewLoader(path string) *Loader {
 	}
 }
 
-func (l *Loader) Load() ([]*entities.NotificationSettings, error) {
+func (l *Loader) Load() ([]*model.NotificationSettings, error) {
 	dat, readErr := os.ReadFile(l.path)
 	if readErr != nil {
 		return nil, readErr
@@ -47,11 +57,19 @@ func (l *Loader) Load() ([]*entities.NotificationSettings, error) {
 		return nil, unmarshalErr
 	}
 
-	var ents []*entities.NotificationSettings
+	var ents []*model.NotificationSettings
 
-	for _, model := range settingsFile.Settings {
-		ents = append(ents, model.ToEntity())
+	for _, mdl := range settingsFile.Settings {
+		entity, toEntErr := mdl.ToEntity()
+		if toEntErr != nil {
+			log.Info().
+				Int64("discordId", mdl.DiscordId).
+				Str("type", mdl.Type).
+				Msg(toEntErr.Error())
+			continue
+		}
+
+		ents = append(ents, entity)
 	}
-
 	return ents, nil
 }

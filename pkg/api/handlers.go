@@ -3,36 +3,20 @@ package api
 import (
 	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-gonic/gin"
-	"log"
+	"github.com/rs/zerolog/log"
 	"net/http"
 	"pthd-notifications/pkg/domain"
-	"pthd-notifications/pkg/domain/entities"
-	"strings"
+	"pthd-notifications/pkg/domain/model"
 )
-
-type notificationsParams struct {
-	DiscordId int64  `form:"discord_id" binding:"required"`
-	Usernames string `form:"usernames" binding:"required"`
-}
-
-func (np *notificationsParams) toContext() *entities.NotificationContext {
-	names := strings.Split(np.Usernames, ",")
-
-	return &entities.NotificationContext{
-		NamesJoined: np.Usernames,
-		Names:       names,
-	}
-}
 
 type notificationHandler struct {
 	service *domain.Service
 }
 
 func (handler *notificationHandler) Handle(c *gin.Context) {
-	var params notificationsParams
-
-	bindErr := c.Bind(&params)
+	notificationContext, bindErr := parseNotificationContext(c)
 	if bindErr != nil {
+		log.Debug().Err(bindErr).Msg("Binding error")
 		c.AbortWithStatusJSON(http.StatusBadRequest,
 			gin.H{
 				"error": "Invalid parameters",
@@ -41,15 +25,31 @@ func (handler *notificationHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	sendErr := handler.service.SendNotification(params.DiscordId, params.toContext())
+	sendErr := handler.service.SendNotification(notificationContext)
 	if sendErr != nil {
-		log.Println(sendErr)
-		sentrygin.GetHubFromContext(c).CaptureException(sendErr)
-		c.AbortWithStatusJSON(http.StatusInternalServerError,
-			gin.H{
-				"error": "Internal server error",
-			},
-		)
+		switch sendErr.(type) {
+		case *domain.ErrNoSettings:
+			c.AbortWithStatusJSON(http.StatusNotFound,
+				gin.H{
+					"error": "No settings for such parameters",
+				},
+			)
+		case *model.ErrNoMessage:
+			c.AbortWithStatusJSON(http.StatusNotFound,
+				gin.H{
+					"error": "No message for this notification type",
+				},
+			)
+		default:
+			log.Debug().Err(sendErr).Msg("Unexpected error")
+			sentrygin.GetHubFromContext(c).CaptureException(sendErr)
+			c.AbortWithStatusJSON(http.StatusInternalServerError,
+				gin.H{
+					"error": "Internal server error",
+				},
+			)
+		}
+		return
 	}
 
 	c.Status(http.StatusOK)
