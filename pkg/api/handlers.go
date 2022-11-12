@@ -3,6 +3,7 @@ package api
 import (
 	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 	"net/http"
 	"pthd-notifications/pkg/domain"
 	"pthd-notifications/pkg/domain/model"
@@ -15,6 +16,7 @@ type notificationHandler struct {
 func (handler *notificationHandler) Handle(c *gin.Context) {
 	notificationContext, bindErr := parseNotificationContext(c)
 	if bindErr != nil {
+		log.Debug().Err(bindErr).Msg("Binding error")
 		c.AbortWithStatusJSON(http.StatusBadRequest,
 			gin.H{
 				"error": "Invalid parameters",
@@ -39,6 +41,7 @@ func (handler *notificationHandler) Handle(c *gin.Context) {
 				},
 			)
 		default:
+			log.Debug().Err(sendErr).Msg("Unexpected error")
 			sentrygin.GetHubFromContext(c).CaptureException(sendErr)
 			c.AbortWithStatusJSON(http.StatusInternalServerError,
 				gin.H{

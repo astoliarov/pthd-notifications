@@ -3,15 +3,17 @@ package api
 import (
 	"context"
 	"fmt"
-	sentrygin "github.com/getsentry/sentry-go/gin"
-	"github.com/gin-gonic/gin"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
-	"pthd-notifications/pkg/domain"
 	"syscall"
 	"time"
+
+	sentrygin "github.com/getsentry/sentry-go/gin"
+	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
+
+	"pthd-notifications/pkg/domain"
 )
 
 type Server struct {
@@ -53,7 +55,7 @@ func (s *Server) prepareRouter() *gin.Engine {
 	return r
 }
 
-func (s *Server) Run(ctx context.Context) {
+func (s *Server) Run(ctx context.Context) error {
 	router := s.prepareRouter()
 
 	srv := &http.Server{
@@ -62,9 +64,10 @@ func (s *Server) Run(ctx context.Context) {
 	}
 
 	go func() {
-		// service connections
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("listen: %s\n", err)
+			log.Fatal().
+				Err(err).
+				Msgf("ListenAndServe server error")
 		}
 	}()
 
@@ -72,14 +75,15 @@ func (s *Server) Run(ctx context.Context) {
 
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Println("Shutdown Server ...")
+	log.Info().Msg("Stopping server ...")
 
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatal("Server Shutdown:", err)
+		return err
 	}
 	// catching ctx.Done(). timeout of 5 seconds.
 	<-ctx.Done()
-	log.Println("Server exiting")
+	log.Info().Msg("Server stopped")
+	return nil
 }

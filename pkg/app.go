@@ -3,12 +3,12 @@ package pkg
 import (
 	"context"
 	"fmt"
-	"log"
 	"pthd-notifications/pkg/api"
 	"pthd-notifications/pkg/connectors"
 	"pthd-notifications/pkg/domain"
 
 	"github.com/getsentry/sentry-go"
+	"github.com/rs/zerolog/log"
 )
 
 type Application struct {
@@ -21,6 +21,8 @@ func NewApplication() (*Application, error) {
 	if configErr != nil {
 		return nil, fmt.Errorf("failed to load config: %s", configErr)
 	}
+
+	setupLogs()
 
 	if config.SentryDSN != "" {
 		if sentryInitErr := sentry.Init(sentry.ClientOptions{
@@ -55,7 +57,6 @@ func NewApplication() (*Application, error) {
 }
 
 func (app *Application) Run(ctx context.Context) error {
-	log.Println("Starting application")
-	app.server.Run(ctx)
-	return nil
+	log.Info().Msg("Starting application")
+	return app.server.Run(ctx)
 }

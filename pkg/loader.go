@@ -3,8 +3,7 @@ package pkg
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"log"
+	"github.com/rs/zerolog/log"
 	"os"
 	"pthd-notifications/pkg/domain/model"
 )
@@ -19,7 +18,7 @@ type NotificationSettingsModel struct {
 func (ns *NotificationSettingsModel) ToEntity() (*model.NotificationSettings, error) {
 	if !model.IsNotificationTypeSupported(ns.Type) {
 		return nil, errors.New(
-			fmt.Sprintf("Notification with type:%s and discord_id: %d not supported", ns.Type, ns.DiscordId),
+			"unsupported type",
 		)
 	}
 
@@ -63,7 +62,10 @@ func (l *Loader) Load() ([]*model.NotificationSettings, error) {
 	for _, mdl := range settingsFile.Settings {
 		entity, toEntErr := mdl.ToEntity()
 		if toEntErr != nil {
-			log.Println(toEntErr.Error())
+			log.Info().
+				Int64("discordId", mdl.DiscordId).
+				Str("type", mdl.Type).
+				Msg(toEntErr.Error())
 			continue
 		}
 

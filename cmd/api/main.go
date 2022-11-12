@@ -2,19 +2,23 @@ package main
 
 import (
 	"context"
-	"log"
+	"github.com/rs/zerolog/log"
 	"pthd-notifications/pkg"
 )
 
 func main() {
 	application, initErr := pkg.NewApplication()
 	if initErr != nil {
-		log.Fatalf("Failed to initialize application: %s", initErr)
+		log.Fatal().
+			Err(initErr).
+			Msgf("failed to initialize API")
 	}
 
 	ctx := context.Background()
 	runErr := application.Run(ctx)
 	if runErr != nil {
-		log.Fatalf("Error of server: %s", runErr)
+		log.Fatal().
+			Err(runErr).
+			Msgf("API server error")
 	}
 }
