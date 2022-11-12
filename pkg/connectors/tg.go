@@ -3,11 +3,14 @@ package connectors
 import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/rs/zerolog/log"
+	"net/http"
 	"pthd-notifications/pkg/domain/model"
+	"time"
 )
 
 func InitBot(token string, debug bool) (*tgbotapi.BotAPI, error) {
-	bot, err := tgbotapi.NewBotAPI(token)
+	client := http.Client{Timeout: 5 * time.Second}
+	bot, err := tgbotapi.NewBotAPIWithClient(token, tgbotapi.APIEndpoint, &client)
 	if err != nil {
 		return nil, err
 	}
