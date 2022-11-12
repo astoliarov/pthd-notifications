@@ -1,22 +1,27 @@
 package domain
 
 import (
-	"pthd-notifications/pkg/domain/entities"
+	"fmt"
+	"pthd-notifications/pkg/domain/model"
 )
 
 type NotificationsMemoryRepo struct {
-	settingsByDiscordID map[int64]*entities.NotificationSettings
+	settingsByDiscordID map[string]*model.NotificationSettings
 }
 
 func NewNotificationsMemoryRepo() *NotificationsMemoryRepo {
 
 	return &NotificationsMemoryRepo{
-		settingsByDiscordID: map[int64]*entities.NotificationSettings{},
+		settingsByDiscordID: map[string]*model.NotificationSettings{},
 	}
 }
 
-func (repo *NotificationsMemoryRepo) GetByDiscordId(discordId int64) (*entities.NotificationSettings, error) {
-	settings, ok := repo.settingsByDiscordID[discordId]
+func (repo *NotificationsMemoryRepo) getKey(discordId int64, notificationType string) string {
+	return fmt.Sprintf("%d_%s", discordId, notificationType)
+}
+
+func (repo *NotificationsMemoryRepo) Get(discordId int64, notificationType string) (*model.NotificationSettings, error) {
+	settings, ok := repo.settingsByDiscordID[repo.getKey(discordId, notificationType)]
 	if !ok {
 		return nil, nil
 	}
@@ -24,8 +29,8 @@ func (repo *NotificationsMemoryRepo) GetByDiscordId(discordId int64) (*entities.
 	return settings, nil
 }
 
-func (repo *NotificationsMemoryRepo) Load(configs []*entities.NotificationSettings) {
+func (repo *NotificationsMemoryRepo) Load(configs []*model.NotificationSettings) {
 	for _, config := range configs {
-		repo.settingsByDiscordID[config.DiscordId] = config
+		repo.settingsByDiscordID[repo.getKey(config.DiscordId, config.Type)] = config
 	}
 }

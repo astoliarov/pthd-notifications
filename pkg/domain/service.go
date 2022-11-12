@@ -1,7 +1,7 @@
 package domain
 
 import (
-	"pthd-notifications/pkg/domain/entities"
+	"pthd-notifications/pkg/domain/model"
 )
 
 type Service struct {
@@ -16,21 +16,20 @@ func NewService(repo INotificationsRepo, connector IConnector) *Service {
 	}
 }
 
-func (s *Service) SendNotification(discordId int64, notificationContext *entities.NotificationContext) error {
-	settings, repoErr := s.repo.GetByDiscordId(discordId)
+func (s *Service) SendNotification(notificationContext model.INotificationContext) error {
+	settings, repoErr := s.repo.Get(notificationContext.GetDiscordId(), notificationContext.GetType())
 	if repoErr != nil {
 		return repoErr
 	}
-	// TODO: maybe here it is better to throw an error?
+
 	if settings == nil {
-		return nil
+		return NewErrNoSettingsFromContext(notificationContext)
 	}
 
-	notification, createErr := entities.NewNotification(notificationContext, settings)
+	notification, createErr := model.NewNotification(notificationContext, settings)
 	if createErr != nil {
 		return createErr
 	}
-	// TODO: maybe here it is better to throw an error?
 	if notification == nil {
 		return nil
 	}

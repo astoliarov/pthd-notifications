@@ -1,4 +1,4 @@
-package entities
+package model
 
 import (
 	"github.com/stretchr/testify/assert"
@@ -19,9 +19,10 @@ func (s *NewNotificationTestSuite) Test__AllCorrect__NotificationCreated() {
 			"Let's battle. Already {{.NamesJoined}} in chat",
 		},
 	}
-	context := &NotificationContext{
+	context := &UsersConnectedNotificationContext{
 		Names:       []string{"КурочкаХлеба", "TiConcerto"},
 		NamesJoined: "КурочкаХлеба,TiConcerto",
+		Id:          2,
 	}
 
 	notification, err := NewNotification(
@@ -35,13 +36,15 @@ func (s *NewNotificationTestSuite) Test__AllCorrect__NotificationCreated() {
 
 func (s *NewNotificationTestSuite) Test__NoMessageInSettings__NoNotification() {
 	settings := &NotificationSettings{
-		DiscordId:         1,
+		DiscordId:         2,
 		TelegramChatId:    2,
 		MessagesTemplates: []string{},
+		Type:              UsersConnectedType,
 	}
-	context := &NotificationContext{
+	context := &UsersConnectedNotificationContext{
 		Names:       []string{"КурочкаХлеба", "TiConcerto"},
 		NamesJoined: "КурочкаХлеба,TiConcerto",
+		Id:          2,
 	}
 
 	notification, err := NewNotification(
@@ -49,7 +52,10 @@ func (s *NewNotificationTestSuite) Test__NoMessageInSettings__NoNotification() {
 		settings,
 	)
 
-	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), &ErrNoMessage{
+		DiscordId: 2,
+		Type:      UsersConnectedType,
+	}, err)
 	assert.Nil(s.T(), notification)
 }
 
@@ -61,9 +67,10 @@ func (s *NewNotificationTestSuite) Test__BrokenTemplate__Err() {
 			"Let's battle. Already {{.NamesJoined in chat",
 		},
 	}
-	context := &NotificationContext{
+	context := &UsersConnectedNotificationContext{
 		Names:       []string{"КурочкаХлеба", "TiConcerto"},
 		NamesJoined: "КурочкаХлеба,TiConcerto",
+		Id:          2,
 	}
 
 	notification, err := NewNotification(
