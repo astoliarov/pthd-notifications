@@ -11,7 +11,7 @@ func main() {
 	if initErr != nil {
 		log.Fatal().
 			Err(initErr).
-			Msgf("failed to initialize API")
+			Msgf("failed to initialize Application")
 	}
 
 	ctx := context.Background()

@@ -3,34 +3,22 @@ package rqueue
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/getsentry/sentry-go"
-	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog/log"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 )
 
 type RedisAsyncAPI struct {
-	client    *redis.Client
-	queueName string
-	timeout   time.Duration
+	connector IRedisConnector
 	executor  IExecutor
 }
 
-func NewRedisAsyncAPI(executor IExecutor, config *RedisConfig) *RedisAsyncAPI {
-	client := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%d", config.Host, config.Port),
-		Password: config.Password,
-		DB:       config.Db,
-	})
+func NewRedisAsyncAPI(executor IExecutor, connector IRedisConnector) *RedisAsyncAPI {
 
 	return &RedisAsyncAPI{
-		client:    client,
-		queueName: config.Queue,
-		timeout:   time.Second * time.Duration(config.ReadTimeout),
+		connector: connector,
 		executor:  executor,
 	}
 }
@@ -50,20 +38,24 @@ func (asyncApi *RedisAsyncAPI) RunConsumer(ctx context.Context) error {
 			isRunning = false
 			log.Debug().Msg("stop consumer by signal")
 		default:
-			asyncApi.executeRead(ctx)
+			readErr := asyncApi.executeRead(ctx)
+			// critical error happened, stop consumer
+			if readErr != nil {
+				return readErr
+			}
 		}
 	}
 
 	return nil
 }
 
-func (asyncApi *RedisAsyncAPI) executeRead(ctx context.Context) {
+func (asyncApi *RedisAsyncAPI) executeRead(ctx context.Context) error {
 	log.Debug().Msg("reading data from queue")
-	_, data, resultErr := asyncApi.readFromQueue(ctx)
+	_, data, resultErr := asyncApi.connector.readFromQueue(ctx)
 	if resultErr != nil {
 		log.Error().Err(resultErr).Msg("ReadFromQueue error")
 		sentry.CaptureException(resultErr)
-		return
+		return resultErr
 	}
 
 	processErr := asyncApi.processMessage(data)
@@ -71,24 +63,8 @@ func (asyncApi *RedisAsyncAPI) executeRead(ctx context.Context) {
 		log.Error().Err(processErr).Msg("processMessage error")
 		sentry.CaptureException(resultErr)
 	}
-}
 
-func (asyncApi *RedisAsyncAPI) readFromQueue(ctx context.Context) (string, string, error) {
-	result := asyncApi.client.BLPop(ctx, asyncApi.timeout, asyncApi.queueName)
-	msg, err := result.Result()
-	if err != nil && err != redis.Nil {
-		return "", "", err
-	}
-
-	if len(msg) == 0 {
-		return "", "", nil
-	}
-
-	if len(msg) != 2 {
-		return "", "", ErrUnexpectedResponseLength
-	}
-
-	return msg[0], msg[1], nil
+	return nil
 }
 
 func (asyncApi *RedisAsyncAPI) processMessage(data string) error {

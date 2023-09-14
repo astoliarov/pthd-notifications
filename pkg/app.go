@@ -76,8 +76,9 @@ func (app *Application) RunRedisConsumer(ctx context.Context) error {
 		return fmt.Errorf("failed to load redis config: %s", redisConfigErr)
 	}
 
-	asyncExecutor := rqueue.NewSingleGoroutineExecutor(app.service)
-	asyncApi := rqueue.NewRedisAsyncAPI(asyncExecutor, redisConfig)
+	connector := rqueue.NewRedisConnector(redisConfig)
+	executor := rqueue.NewSingleGoroutineExecutor(app.service)
+	asyncApi := rqueue.NewRedisAsyncAPI(executor, connector)
 
 	return asyncApi.RunConsumer(ctx)
 }
