@@ -33,6 +33,14 @@ lint/vet:
 .PHONY:
 lint: lint/fmt lint/vet
 
+##########
+# Generate
+##########
+
+.PHONY: generate
+generate:
+	go generate ./...
+
 #########
 # Testing
 #########

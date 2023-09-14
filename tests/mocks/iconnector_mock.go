@@ -5,10 +5,10 @@
 package mocks
 
 import (
-	entities "pthd-notifications/pkg/domain/model"
+	model "pthd-notifications/pkg/domain/model"
 	reflect "reflect"
 
-	gomock "github.com/golang/mock/gomock"
+	gomock "go.uber.org/mock/gomock"
 )
 
 // MockIConnector is a mock of IConnector interface.
@@ -35,7 +35,7 @@ func (m *MockIConnector) EXPECT() *MockIConnectorMockRecorder {
 }
 
 // Send mocks base method.
-func (m *MockIConnector) Send(arg0 *entities.Notification) error {
+func (m *MockIConnector) Send(arg0 *model.Notification) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Send", arg0)
 	ret0, _ := ret[0].(error)

@@ -2,10 +2,10 @@ package domain
 
 import (
 	"errors"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	_ "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 	"pthd-notifications/pkg/domain/model"
 	"pthd-notifications/tests/mocks"
 	"testing"

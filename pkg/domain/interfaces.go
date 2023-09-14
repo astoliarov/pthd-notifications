@@ -1,7 +1,7 @@
 package domain
 
 import (
-	_ "github.com/golang/mock/mockgen/model"
+	_ "go.uber.org/mock/mockgen/model"
 	"pthd-notifications/pkg/domain/model"
 )
 

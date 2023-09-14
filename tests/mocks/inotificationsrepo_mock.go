@@ -5,10 +5,10 @@
 package mocks
 
 import (
-	entities "pthd-notifications/pkg/domain/model"
+	model "pthd-notifications/pkg/domain/model"
 	reflect "reflect"
 
-	gomock "github.com/golang/mock/gomock"
+	gomock "go.uber.org/mock/gomock"
 )
 
 // MockINotificationsRepo is a mock of INotificationsRepo interface.
@@ -35,10 +35,10 @@ func (m *MockINotificationsRepo) EXPECT() *MockINotificationsRepoMockRecorder {
 }
 
 // Get mocks base method.
-func (m *MockINotificationsRepo) Get(arg0 int64, arg1 string) (*entities.NotificationSettings, error) {
+func (m *MockINotificationsRepo) Get(arg0 int64, arg1 string) (*model.NotificationSettings, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", arg0, arg1)
-	ret0, _ := ret[0].(*entities.NotificationSettings)
+	ret0, _ := ret[0].(*model.NotificationSettings)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
