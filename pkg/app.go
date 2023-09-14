@@ -13,19 +13,14 @@ import (
 )
 
 type Application struct {
-	service  *domain.Service
-	server   *api.Server
-	asyncApi *rqueue.RedisAsyncAPI
+	service *domain.Service
+	config  *Config
 }
 
 func NewApplication() (*Application, error) {
 	config, configErr := LoadConfig()
 	if configErr != nil {
 		return nil, fmt.Errorf("failed to load config: %s", configErr)
-	}
-	redisConfig, redisConfigErr := rqueue.LoadRedisConfig()
-	if redisConfigErr != nil {
-		return nil, fmt.Errorf("failed to load config: %s", redisConfigErr)
 	}
 
 	setupLogs()
@@ -54,24 +49,35 @@ func NewApplication() (*Application, error) {
 	repository.Load(settings)
 
 	service := domain.NewService(repository, tgConnector)
-	server := api.NewServer(config.ApiHost, config.ApiPort, config.Debug, service)
-
-	asyncExecutor := rqueue.NewSingleGoroutineExecutor(service)
-	asyncApi := rqueue.NewRedisAsyncAPI(asyncExecutor, redisConfig)
 
 	return &Application{
-		service:  service,
-		server:   server,
-		asyncApi: asyncApi,
+		service: service,
+		config:  config,
 	}, nil
 }
 
 func (app *Application) RunAPI(ctx context.Context) error {
 	log.Info().Msg("Starting application")
-	return app.server.Run(ctx)
+
+	apiConfig, apiConfigErr := api.LoadApiConfig()
+	if apiConfigErr != nil {
+		return fmt.Errorf("failed to load API config: %s", apiConfigErr)
+	}
+
+	server := api.NewServer(apiConfig.Host, apiConfig.Port, app.config.Debug, app.service)
+
+	return server.Run(ctx)
 }
 
 func (app *Application) RunRedisConsumer(ctx context.Context) error {
 	log.Info().Msg("Starting Async application")
-	return app.asyncApi.RunConsumer(ctx)
+	redisConfig, redisConfigErr := rqueue.LoadRedisConfig()
+	if redisConfigErr != nil {
+		return fmt.Errorf("failed to load redis config: %s", redisConfigErr)
+	}
+
+	asyncExecutor := rqueue.NewSingleGoroutineExecutor(app.service)
+	asyncApi := rqueue.NewRedisAsyncAPI(asyncExecutor, redisConfig)
+
+	return asyncApi.RunConsumer(ctx)
 }
