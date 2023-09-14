@@ -2,10 +2,16 @@
 # Build
 #######
 
-.PHONY: build
-build:
+.PHONY: build/api
+build/api:
 	go build -v -o bin/api ./cmd/api
 
+.PHONY: build/async-api
+build/async-api:
+	go build -v -o bin/async-api ./cmd/async-api
+
+.PHONY: build
+build: build/api build/async-api
 
 ##################
 # Code style tools
@@ -43,8 +49,15 @@ test:
 run/api:
 	./bin/api
 
-.PHONY: run-rebuild
-run-rebuild: build run/api
+.PHONY: run/async-api
+run/async-api:
+	./bin/async-api
+
+.PHONY: run/rebuild/api
+run/rebuild/api: build run/api
+
+.PHONY: run/rebuild/async-api
+run/rebuild/async-api: build run/async-api
 
 ########
 # Docker
@@ -54,16 +67,23 @@ run-rebuild: build run/api
 docker/build:
 	docker buildx build -t bghji/pthd-notifications . --platform=linux/amd64
 
-
 .PHONY: docker/push
 docker/push:
 	docker push bghji/pthd-notifications
 
-.PHONY: local-deploy/infrastructure
-local-deploy/infrastructure:
+.PHONY: local-deploy/infrastructure/up
+local-deploy/infrastructure/up:
 	docker-compose -f docker-compose.yml up -d
 
-.PHONY: local-deploy/application
-local-deploy/application:
+.PHONY: local-deploy/infrastructure/stop
+local-deploy/infrastructure/stop:
+	docker-compose -f docker-compose.yml stop
+
+.PHONY: local-deploy/application/up
+local-deploy/application/up:
 	docker-compose -f docker-compose.yml --profile application up -d
 
+
+.PHONY: local-deploy/application/stop
+local-deploy/application/stop:
+	docker-compose -f docker-compose.yml --profile application stop

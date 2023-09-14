@@ -15,7 +15,7 @@ func main() {
 	}
 
 	ctx := context.Background()
-	runErr := application.Run(ctx)
+	runErr := application.RunAPI(ctx)
 	if runErr != nil {
 		log.Fatal().
 			Err(runErr).

@@ -1,6 +1,7 @@
 package connectors
 
 import (
+	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/rs/zerolog/log"
 	"net/http"
@@ -9,7 +10,7 @@ import (
 )
 
 func InitBot(token string, debug bool) (*tgbotapi.BotAPI, error) {
-	client := http.Client{Timeout: 5 * time.Second}
+	client := http.Client{Timeout: 10 * time.Second}
 	bot, err := tgbotapi.NewBotAPIWithClient(token, tgbotapi.APIEndpoint, &client)
 	if err != nil {
 		return nil, err
@@ -35,5 +36,8 @@ func NewTelegramConnector(bot *tgbotapi.BotAPI) *TelegramConnector {
 func (tc *TelegramConnector) Send(notification *model.Notification) error {
 	msg := tgbotapi.NewMessage(notification.TelegramChatId, notification.Message)
 	_, sendErr := tc.bot.Send(msg)
-	return sendErr
+	if sendErr != nil {
+		return fmt.Errorf("TelegramConnector.Send: %w", sendErr)
+	}
+	return nil
 }

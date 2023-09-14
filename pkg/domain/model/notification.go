@@ -6,11 +6,6 @@ import (
 	"text/template"
 )
 
-type NotificationContext struct {
-	NamesJoined string
-	Names       []string
-}
-
 type NotificationSettings struct {
 	DiscordId         int64
 	TelegramChatId    int64

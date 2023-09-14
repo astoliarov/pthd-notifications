@@ -1,5 +1,4 @@
-# Builder image, where we build the example.
-FROM golang:1.19-alpine3.16 AS builder
+FROM golang:1.21-alpine3.18 AS builder
 
 # Dependencies for build
 RUN apk --no-cache add make build-base
@@ -10,7 +9,7 @@ RUN make build
 
 
 # Final image.
-FROM alpine:3.16.1
+FROM alpine:3.18.1
 
 RUN apk --no-cache add bash ca-certificates tzdata build-base
 ENV TZ Europe/Minsk
