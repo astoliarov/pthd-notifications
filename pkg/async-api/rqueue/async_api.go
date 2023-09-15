@@ -51,7 +51,7 @@ func (asyncApi *RedisAsyncAPI) RunConsumer(ctx context.Context) error {
 
 func (asyncApi *RedisAsyncAPI) executeRead(ctx context.Context) error {
 	log.Debug().Msg("reading data from queue")
-	_, data, resultErr := asyncApi.connector.readFromQueue(ctx)
+	_, data, resultErr := asyncApi.connector.ReadFromQueue(ctx)
 	if resultErr != nil {
 		log.Error().Err(resultErr).Msg("ReadFromQueue error")
 		sentry.CaptureException(resultErr)

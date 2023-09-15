@@ -7,6 +7,7 @@ import (
 	"pthd-notifications/pkg/domain/model"
 )
 
+//go:generate mockgen -destination=../../../tests/mocks/iexecutor_mock.go -package=mocks pthd-notifications/pkg/async-api/rqueue IExecutor
 type IExecutor interface {
 	SendNotification(notificationContext model.INotificationContext) error
 }

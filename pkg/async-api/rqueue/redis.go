@@ -7,8 +7,9 @@ import (
 	"time"
 )
 
+//go:generate mockgen -destination=../../../tests/mocks/iredisconnector_mock.go -package=mocks pthd-notifications/pkg/async-api/rqueue IRedisConnector
 type IRedisConnector interface {
-	readFromQueue(ctx context.Context) (string, string, error)
+	ReadFromQueue(ctx context.Context) (string, string, error)
 }
 
 type RedisConnector struct {
@@ -31,7 +32,7 @@ func NewRedisConnector(config *RedisConfig) *RedisConnector {
 	}
 }
 
-func (connector *RedisConnector) readFromQueue(ctx context.Context) (string, string, error) {
+func (connector *RedisConnector) ReadFromQueue(ctx context.Context) (string, string, error) {
 	result := connector.client.BLPop(ctx, connector.timeout, connector.queueName)
 	msg, err := result.Result()
 	if err != nil && err != redis.Nil {
