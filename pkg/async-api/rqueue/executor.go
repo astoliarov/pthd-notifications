@@ -6,6 +6,7 @@ import (
 	"pthd-notifications/pkg/async-api/rqueue/messages"
 	"pthd-notifications/pkg/domain"
 	"pthd-notifications/pkg/domain/model"
+	"time"
 )
 
 //go:generate mockgen -destination=../../../tests/mocks/async-api/rqueue/iexecutor_mock.go -package=mocks pthd-notifications/pkg/async-api/rqueue IExecutor
@@ -25,6 +26,14 @@ func NewSingleGoroutineExecutor(service *domain.Service) *SingleGoroutineExecuto
 
 func (executor *SingleGoroutineExecutor) SendNotification(msg messages.RedisEventMessage) error {
 	notificationContext := msg.ToContext()
+
+	if time.Since(msg.GetHappenedAt()) > 5*time.Minute {
+		log.Info().
+			Str("type", notificationContext.GetType()).
+			Time("HappenedAt", msg.GetHappenedAt()).
+			Msg("Message is outdated")
+		return nil
+	}
 
 	executionErr := executor.service.SendNotification(notificationContext)
 	var errNoSettings *domain.ErrNoSettings
