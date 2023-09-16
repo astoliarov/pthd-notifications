@@ -72,9 +72,15 @@ func (s *Server) Run(ctx context.Context) error {
 	}()
 
 	quit := make(chan os.Signal, 10)
-
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
+
+	select {
+	case <-ctx.Done():
+		break
+	case <-quit:
+		break
+	}
+
 	log.Info().Msg("Stopping server ...")
 
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)

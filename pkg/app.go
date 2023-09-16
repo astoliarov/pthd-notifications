@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"pthd-notifications/pkg/api"
+	"pthd-notifications/pkg/async-api/rqueue"
 	"pthd-notifications/pkg/connectors"
 	"pthd-notifications/pkg/domain"
 
@@ -13,7 +14,7 @@ import (
 
 type Application struct {
 	service *domain.Service
-	server  *api.Server
+	config  *Config
 }
 
 func NewApplication() (*Application, error) {
@@ -48,15 +49,36 @@ func NewApplication() (*Application, error) {
 	repository.Load(settings)
 
 	service := domain.NewService(repository, tgConnector)
-	server := api.NewServer(config.ApiHost, config.ApiPort, config.Debug, service)
 
 	return &Application{
 		service: service,
-		server:  server,
+		config:  config,
 	}, nil
 }
 
-func (app *Application) Run(ctx context.Context) error {
+func (app *Application) RunAPI(ctx context.Context) error {
 	log.Info().Msg("Starting application")
-	return app.server.Run(ctx)
+
+	apiConfig, apiConfigErr := api.LoadApiConfig()
+	if apiConfigErr != nil {
+		return fmt.Errorf("failed to load API config: %s", apiConfigErr)
+	}
+
+	server := api.NewServer(apiConfig.Host, apiConfig.Port, app.config.Debug, app.service)
+
+	return server.Run(ctx)
+}
+
+func (app *Application) RunRedisConsumer(ctx context.Context) error {
+	log.Info().Msg("Starting Async application")
+	redisConfig, redisConfigErr := rqueue.LoadRedisConfig()
+	if redisConfigErr != nil {
+		return fmt.Errorf("failed to load redis config: %s", redisConfigErr)
+	}
+
+	connector := rqueue.NewRedisConnector(redisConfig)
+	executor := rqueue.NewSingleGoroutineExecutor(app.service)
+	asyncApi := rqueue.NewRedisAsyncAPI(executor, connector)
+
+	return asyncApi.RunConsumer(ctx)
 }
