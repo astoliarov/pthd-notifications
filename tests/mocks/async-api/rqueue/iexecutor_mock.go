@@ -5,7 +5,7 @@
 package mocks
 
 import (
-	model "pthd-notifications/pkg/domain/model"
+	messages "pthd-notifications/pkg/async-api/rqueue/messages"
 	reflect "reflect"
 
 	gomock "go.uber.org/mock/gomock"
@@ -35,7 +35,7 @@ func (m *MockIExecutor) EXPECT() *MockIExecutorMockRecorder {
 }
 
 // SendNotification mocks base method.
-func (m *MockIExecutor) SendNotification(arg0 model.INotificationContext) error {
+func (m *MockIExecutor) SendNotification(arg0 messages.RedisEventMessage) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendNotification", arg0)
 	ret0, _ := ret[0].(error)

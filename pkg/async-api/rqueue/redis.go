@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-//go:generate mockgen -destination=../../../tests/mocks/iredisconnector_mock.go -package=mocks pthd-notifications/pkg/async-api/rqueue IRedisConnector
+//go:generate mockgen -destination=../../../tests/mocks/async-api/rqueue/iredisconnector_mock.go -package=mocks pthd-notifications/pkg/async-api/rqueue IRedisConnector
 type IRedisConnector interface {
 	ReadFromQueue(ctx context.Context) (string, string, error)
 }

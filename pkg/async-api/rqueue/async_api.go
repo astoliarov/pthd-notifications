@@ -7,6 +7,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"os"
 	"os/signal"
+	"pthd-notifications/pkg/async-api/rqueue/messages"
 	"syscall"
 )
 
@@ -72,21 +73,21 @@ func (asyncApi *RedisAsyncAPI) processMessage(data string) error {
 		return nil
 	}
 
-	minMessage := &minimalMessage{}
+	minMessage := &messages.MinimalMessage{}
 	unmarshalErr := json.Unmarshal([]byte(data), minMessage)
 	if unmarshalErr != nil {
 		return unmarshalErr
 	}
 
-	var message iMessageWithContext
+	var message messages.RedisEventMessage
 
 	switch minMessage.MessageType {
-	case messageTypeNewUser:
-		message = &messageNewUserInChannelData{}
-	case messageTypeUsersConnected:
-		message = &messageUsersConnectedToChannel{}
-	case messageTypeUsersLeave:
-		message = &messageUsersLeftChannel{}
+	case messages.MessageTypeNewUser:
+		message = &messages.MessageNewUserInChannelData{}
+	case messages.MessageTypeUsersConnected:
+		message = &messages.MessageUsersConnectedToChannel{}
+	case messages.MessageTypeUsersLeave:
+		message = &messages.MessageUsersLeftChannel{}
 	default:
 		return ErrUnexpectedMessageType
 	}
@@ -96,5 +97,5 @@ func (asyncApi *RedisAsyncAPI) processMessage(data string) error {
 		return unmarshalFullMessageErr
 	}
 
-	return asyncApi.executor.SendNotification(message.toContext())
+	return asyncApi.executor.SendNotification(message)
 }
