@@ -9,6 +9,9 @@ type NotificationsMemoryRepo struct {
 	settingsByDiscordID map[string]*model.NotificationSettings
 }
 
+// interface compliance check
+var _ INotificationsRepo = (*NotificationsMemoryRepo)(nil)
+
 func NewNotificationsMemoryRepo() *NotificationsMemoryRepo {
 
 	return &NotificationsMemoryRepo{

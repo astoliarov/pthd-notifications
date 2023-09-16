@@ -91,7 +91,6 @@ local-deploy/infrastructure/stop:
 local-deploy/application/up:
 	docker-compose -f docker-compose.yml --profile application up -d
 
-
 .PHONY: local-deploy/application/stop
 local-deploy/application/stop:
 	docker-compose -f docker-compose.yml --profile application stop
