@@ -36,15 +36,21 @@ func (executor *SingleGoroutineExecutor) SendNotification(msg messages.RedisEven
 	}
 
 	executionErr := executor.service.SendNotification(notificationContext)
-	var errNoSettings *domain.ErrNoSettings
-	var errNoMessage *model.ErrNoMessage
-	switch {
-	case errors.As(executionErr, &errNoSettings):
-		log.Info().Str("type", notificationContext.GetType()).Msg("No config for type")
-		return nil
-	case errors.As(executionErr, &errNoMessage):
-		log.Info().Str("type", notificationContext.GetType()).Msg("No message for type")
-		return nil
+	if executionErr == nil {
+		log.Info().Str("type", notificationContext.GetType()).Msg("Notification sent")
+	} else {
+		var errNoSettings *domain.ErrNoSettings
+		var errNoMessage *model.ErrNoMessage
+		switch {
+		case errors.As(executionErr, &errNoSettings):
+			log.Info().Str("type", notificationContext.GetType()).Msg("No config for type")
+			return nil
+		case errors.As(executionErr, &errNoMessage):
+			log.Info().Str("type", notificationContext.GetType()).Msg("No message for type")
+			return nil
+		}
+		return executionErr
 	}
-	return executionErr
+
+	return nil
 }
