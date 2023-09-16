@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 	"pthd-notifications/pkg/domain/model"
-	"pthd-notifications/tests/mocks"
+	domain_mocks "pthd-notifications/tests/mocks/domain"
 	"testing"
 )
 
@@ -15,8 +15,8 @@ type ServiceTestSuite struct {
 	suite.Suite
 
 	controller     *gomock.Controller
-	connectorMock  *mocks.MockIConnector
-	repositoryMock *mocks.MockINotificationsRepo
+	connectorMock  *domain_mocks.MockIConnector
+	repositoryMock *domain_mocks.MockINotificationsRepo
 
 	service *Service
 }
@@ -24,8 +24,8 @@ type ServiceTestSuite struct {
 func (s *ServiceTestSuite) SetupTest() {
 	s.controller = gomock.NewController(s.T())
 
-	s.connectorMock = mocks.NewMockIConnector(s.controller)
-	s.repositoryMock = mocks.NewMockINotificationsRepo(s.controller)
+	s.connectorMock = domain_mocks.NewMockIConnector(s.controller)
+	s.repositoryMock = domain_mocks.NewMockINotificationsRepo(s.controller)
 
 	s.service = NewService(
 		s.repositoryMock,

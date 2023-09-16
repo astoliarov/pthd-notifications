@@ -1,4 +1,4 @@
-package rqueue
+package messages
 
 import (
 	"pthd-notifications/pkg/domain/model"
@@ -6,47 +6,52 @@ import (
 	"time"
 )
 
-const messageTypeNewUser = "new_user"
-const messageTypeUsersConnected = "users_connected"
-const messageTypeUsersLeave = "users_leave"
+const MessageTypeNewUser = "new_user"
+const MessageTypeUsersConnected = "users_connected"
+const MessageTypeUsersLeave = "users_leave"
 
-type minimalMessage struct {
+type MinimalMessage struct {
 	MessageType string `json:"type"`
 }
 
-type message struct {
+type RedisEventMessage interface {
+	ToContext() model.INotificationContext
+	GetHappenedAt() time.Time
+}
+
+type Message struct {
 	Version     int       `json:"version"`
 	MessageType string    `json:"type"`
 	HappenedAt  time.Time `json:"happened_at"`
 	ChannelId   int64     `json:"channel_id"`
 }
 
-type iMessageWithContext interface {
-	toContext() model.INotificationContext
+func (msg Message) GetHappenedAt() time.Time {
+	return msg.HappenedAt
 }
 
-type messageNewUserInChannelData struct {
-	message
+type MessageNewUserInChannelData struct {
+	Message
 	Data struct {
 		Username string `json:"username"`
 	} `json:"data"`
 }
 
-func (msg messageNewUserInChannelData) toContext() model.INotificationContext {
+func (msg MessageNewUserInChannelData) ToContext() model.INotificationContext {
 	return &model.NewUserInChannelContext{
 		Id:       msg.ChannelId,
 		Username: msg.Data.Username,
 	}
 }
 
-type messageUsersConnectedToChannel struct {
-	message
+type MessageUsersConnectedToChannel struct {
+	Message
 	Data struct {
 		Usernames []string `json:"usernames"`
 	} `json:"data"`
 }
 
-func (msg messageUsersConnectedToChannel) toContext() model.INotificationContext {
+func (msg MessageUsersConnectedToChannel) ToContext() model.INotificationContext {
 	return &model.UsersConnectedNotificationContext{
 		Id:          msg.ChannelId,
 		Names:       msg.Data.Usernames,
@@ -54,11 +59,11 @@ func (msg messageUsersConnectedToChannel) toContext() model.INotificationContext
 	}
 }
 
-type messageUsersLeftChannel struct {
-	message
+type MessageUsersLeftChannel struct {
+	Message
 }
 
-func (msg messageUsersLeftChannel) toContext() model.INotificationContext {
+func (msg MessageUsersLeftChannel) ToContext() model.INotificationContext {
 	return &model.UsersLeftChannelNotificationContext{
 		Id: msg.ChannelId,
 	}

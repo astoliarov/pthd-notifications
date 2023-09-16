@@ -6,18 +6,18 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
-	"pthd-notifications/pkg/domain/model"
-	"pthd-notifications/tests/mocks"
-	"strings"
+	"pthd-notifications/pkg/async-api/rqueue/messages"
+	rqueue_mocks "pthd-notifications/tests/mocks/async-api/rqueue"
 	"testing"
+	"time"
 )
 
 type RedisAsyncAPITestSuite struct {
 	suite.Suite
 
 	controller    *gomock.Controller
-	executorMock  *mocks.MockIExecutor
-	connectorMock *mocks.MockIRedisConnector
+	executorMock  *rqueue_mocks.MockIExecutor
+	connectorMock *rqueue_mocks.MockIRedisConnector
 
 	api *RedisAsyncAPI
 }
@@ -25,8 +25,8 @@ type RedisAsyncAPITestSuite struct {
 func (s *RedisAsyncAPITestSuite) SetupTest() {
 	s.controller = gomock.NewController(s.T())
 
-	s.executorMock = mocks.NewMockIExecutor(s.controller)
-	s.connectorMock = mocks.NewMockIRedisConnector(s.controller)
+	s.executorMock = rqueue_mocks.NewMockIExecutor(s.controller)
+	s.connectorMock = rqueue_mocks.NewMockIRedisConnector(s.controller)
 
 	s.api = NewRedisAsyncAPI(
 		s.executorMock,
@@ -65,14 +65,24 @@ func (s *RedisAsyncAPITestSuite) Test_executeRead_notExpectedMessage_NotSentNoEr
 func (s *RedisAsyncAPITestSuite) Test_executeRead_correctMessage_Sent() {
 	data := `{"version":1,"type":"users_connected","data":{"usernames":["ticoncerto"]},"channel_id":1,"happened_at":"2023-09-12T17:44:00.418879Z"}`
 
-	notificationContext := &model.UsersConnectedNotificationContext{
-		Id:          1,
-		Names:       []string{"ticoncerto"},
-		NamesJoined: strings.Join([]string{"ticoncerto"}, ","),
+	happenedAt, _ := time.Parse(time.RFC3339, "2023-09-12T17:44:00.418879Z")
+
+	msg := &messages.MessageUsersConnectedToChannel{
+		Message: messages.Message{
+			Version:     1,
+			MessageType: "users_connected",
+			HappenedAt:  happenedAt,
+			ChannelId:   1,
+		},
+		Data: struct {
+			Usernames []string `json:"usernames"`
+		}{
+			Usernames: []string{"ticoncerto"},
+		},
 	}
 
 	s.connectorMock.EXPECT().ReadFromQueue(gomock.Any()).Return("", data, nil)
-	s.executorMock.EXPECT().SendNotification(notificationContext).Return(nil)
+	s.executorMock.EXPECT().SendNotification(msg).Return(nil)
 
 	readErr := s.api.executeRead(context.TODO())
 
@@ -82,16 +92,26 @@ func (s *RedisAsyncAPITestSuite) Test_executeRead_correctMessage_Sent() {
 func (s *RedisAsyncAPITestSuite) Test_executeRead_correctMessageSendErr_NoErr() {
 	data := `{"version":1,"type":"users_connected","data":{"usernames":["ticoncerto"]},"channel_id":1,"happened_at":"2023-09-12T17:44:00.418879Z"}`
 
-	notificationContext := &model.UsersConnectedNotificationContext{
-		Id:          1,
-		Names:       []string{"ticoncerto"},
-		NamesJoined: strings.Join([]string{"ticoncerto"}, ","),
+	happenedAt, _ := time.Parse(time.RFC3339, "2023-09-12T17:44:00.418879Z")
+
+	msg := &messages.MessageUsersConnectedToChannel{
+		Message: messages.Message{
+			Version:     1,
+			MessageType: "users_connected",
+			HappenedAt:  happenedAt,
+			ChannelId:   1,
+		},
+		Data: struct {
+			Usernames []string `json:"usernames"`
+		}{
+			Usernames: []string{"ticoncerto"},
+		},
 	}
 
 	testErr := errors.New("test error")
 
 	s.connectorMock.EXPECT().ReadFromQueue(gomock.Any()).Return("", data, nil)
-	s.executorMock.EXPECT().SendNotification(notificationContext).Return(testErr)
+	s.executorMock.EXPECT().SendNotification(msg).Return(testErr)
 
 	readErr := s.api.executeRead(context.TODO())
 

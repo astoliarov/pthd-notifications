@@ -3,13 +3,14 @@ package rqueue
 import (
 	"errors"
 	"github.com/rs/zerolog/log"
+	"pthd-notifications/pkg/async-api/rqueue/messages"
 	"pthd-notifications/pkg/domain"
 	"pthd-notifications/pkg/domain/model"
 )
 
-//go:generate mockgen -destination=../../../tests/mocks/iexecutor_mock.go -package=mocks pthd-notifications/pkg/async-api/rqueue IExecutor
+//go:generate mockgen -destination=../../../tests/mocks/async-api/rqueue/iexecutor_mock.go -package=mocks pthd-notifications/pkg/async-api/rqueue IExecutor
 type IExecutor interface {
-	SendNotification(notificationContext model.INotificationContext) error
+	SendNotification(msg messages.RedisEventMessage) error
 }
 
 type SingleGoroutineExecutor struct {
@@ -22,7 +23,9 @@ func NewSingleGoroutineExecutor(service *domain.Service) *SingleGoroutineExecuto
 	}
 }
 
-func (executor *SingleGoroutineExecutor) SendNotification(notificationContext model.INotificationContext) error {
+func (executor *SingleGoroutineExecutor) SendNotification(msg messages.RedisEventMessage) error {
+	notificationContext := msg.ToContext()
+
 	executionErr := executor.service.SendNotification(notificationContext)
 	var errNoSettings *domain.ErrNoSettings
 	var errNoMessage *model.ErrNoMessage
