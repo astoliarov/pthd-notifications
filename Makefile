@@ -1,3 +1,13 @@
+#############
+# Environment
+#############
+.PHONY: install/golangci-lint
+install/golangci-lint:
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.2
+
+.PHONY: install-ci-deps
+install: install/golangci-lint
+
 #######
 # Build
 #######
@@ -30,8 +40,12 @@ lint/fmt:
 lint/vet:
 	go vet ./...
 
+.PHONY: lint/golangci-lint
+lint/golangci-lint:
+	golangci-lint run ./...
+
 .PHONY:
-lint: lint/fmt lint/vet
+lint: lint/fmt lint/vet lint/golangci-lint
 
 ##########
 # Generate
