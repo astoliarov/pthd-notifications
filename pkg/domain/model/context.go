@@ -3,13 +3,13 @@ package model
 const NotificationTypeUsersConnected = "users_connected"
 const NotificationTypeUsersLeftChannel = "users_left_channel"
 const NotificationTypeNewUserInChannel = "new_user_in_channel"
-const NotificationTypeNewUserLeftChannel = "user_left_channel"
+const NotificationTypeUserLeftChannel = "user_left_channel"
 
 var NotificationTypes = []string{
 	NotificationTypeUsersConnected,
 	NotificationTypeUsersLeftChannel,
 	NotificationTypeNewUserInChannel,
-	NotificationTypeNewUserLeftChannel,
+	NotificationTypeUserLeftChannel,
 }
 
 func IsNotificationTypeSupported(nType string) bool {
@@ -72,7 +72,7 @@ type UserLeftChannelContext struct {
 }
 
 func (nc *UserLeftChannelContext) GetType() string {
-	return NotificationTypeNewUserLeftChannel
+	return NotificationTypeUserLeftChannel
 }
 
 func (nc *UserLeftChannelContext) GetDiscordId() int64 {
