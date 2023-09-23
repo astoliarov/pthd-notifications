@@ -8,7 +8,8 @@ import (
 
 const MessageTypeNewUser = "new_user"
 const MessageTypeUsersConnected = "users_connected"
-const MessageTypeUsersLeave = "users_leave"
+const MessageTypeUsersLeft = "users_left"
+const MessageTypeUserLeft = "user_left"
 
 type MinimalMessage struct {
 	MessageType string `json:"type"`
@@ -66,5 +67,19 @@ type MessageUsersLeftChannel struct {
 func (msg MessageUsersLeftChannel) ToContext() model.INotificationContext {
 	return &model.UsersLeftChannelNotificationContext{
 		Id: msg.ChannelId,
+	}
+}
+
+type MessageUserLeftChannel struct {
+	Message
+	Data struct {
+		Username string `json:"username"`
+	} `json:"data"`
+}
+
+func (msg MessageUserLeftChannel) ToContext() model.INotificationContext {
+	return &model.UserLeftChannelContext{
+		Id:       msg.ChannelId,
+		Username: msg.Data.Username,
 	}
 }

@@ -86,8 +86,10 @@ func (asyncApi *RedisAsyncAPI) processMessage(data string) error {
 		message = &messages.MessageNewUserInChannelData{}
 	case messages.MessageTypeUsersConnected:
 		message = &messages.MessageUsersConnectedToChannel{}
-	case messages.MessageTypeUsersLeave:
+	case messages.MessageTypeUsersLeft:
 		message = &messages.MessageUsersLeftChannel{}
+	case messages.MessageTypeUserLeft:
+		message = &messages.MessageUserLeftChannel{}
 	default:
 		return ErrUnexpectedMessageType
 	}
