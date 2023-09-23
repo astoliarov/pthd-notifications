@@ -72,7 +72,7 @@ type UserLeftChannelContext struct {
 }
 
 func (nc *UserLeftChannelContext) GetType() string {
-	return NotificationTypeNewUserInChannel
+	return NotificationTypeNewUserLeftChannel
 }
 
 func (nc *UserLeftChannelContext) GetDiscordId() int64 {
