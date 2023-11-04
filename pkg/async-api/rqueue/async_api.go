@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"github.com/getsentry/sentry-go"
 	"github.com/rs/zerolog/log"
-	"os"
 	"os/signal"
 	"pthd-notifications/pkg/async-api/rqueue/messages"
 	"syscall"
@@ -26,8 +25,8 @@ func NewRedisAsyncAPI(executor IExecutor, connector IRedisConnector) *RedisAsync
 
 func (asyncApi *RedisAsyncAPI) RunConsumer(ctx context.Context) error {
 
-	signalCh := make(chan os.Signal, 10)
-	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
+	ctx, stop := signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
 	isRunning := true
 	for isRunning {
@@ -35,9 +34,6 @@ func (asyncApi *RedisAsyncAPI) RunConsumer(ctx context.Context) error {
 		case <-ctx.Done():
 			isRunning = false
 			log.Debug().Msg("stop consumer by context.Done()")
-		case <-signalCh:
-			isRunning = false
-			log.Debug().Msg("stop consumer by signal")
 		default:
 			readErr := asyncApi.executeRead(ctx)
 			// critical error happened, stop consumer
