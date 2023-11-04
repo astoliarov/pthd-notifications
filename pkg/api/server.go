@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"os"
 	"os/signal"
 	"syscall"
 	"time"
@@ -71,25 +70,21 @@ func (s *Server) Run(ctx context.Context) error {
 		}
 	}()
 
-	quit := make(chan os.Signal, 10)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	notifiableCtx, stop := signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
-	select {
-	case <-ctx.Done():
-		break
-	case <-quit:
-		break
-	}
+	<-notifiableCtx.Done()
 
 	log.Info().Msg("Stopping server ...")
-
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
 		return err
 	}
 	// catching ctx.Done(). timeout of 5 seconds.
+
 	<-ctx.Done()
 	log.Info().Msg("Server stopped")
+
 	return nil
 }
