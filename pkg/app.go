@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"pthd-notifications/pkg/api"
 	"pthd-notifications/pkg/async-api/rqueue"
+	chi_api "pthd-notifications/pkg/chi-api"
 	"pthd-notifications/pkg/connectors"
 	"pthd-notifications/pkg/domain"
 
@@ -64,7 +65,7 @@ func (app *Application) RunAPI(ctx context.Context) error {
 		return fmt.Errorf("failed to load API config: %s", apiConfigErr)
 	}
 
-	server := api.NewServer(apiConfig.Host, apiConfig.Port, app.config.Debug, app.service)
+	server := chi_api.NewServer(apiConfig.Host, apiConfig.Port, app.config.Debug, app.service)
 
 	return server.Run(ctx)
 }
