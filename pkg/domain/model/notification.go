@@ -30,7 +30,7 @@ type Notification struct {
 func NewNotification(notificationContext INotificationContext, settings *NotificationSettings) (*Notification, error) {
 	messageTemplate := settings.getRandomMessageTemplate()
 	if messageTemplate == nil {
-		return nil, NewErrNoSettingsFromContext(notificationContext)
+		return nil, NewErrNoMessageFromContext(notificationContext)
 	}
 
 	tmpl, parseErr := template.New("").Parse(*messageTemplate)
