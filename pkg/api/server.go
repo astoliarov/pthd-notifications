@@ -3,16 +3,18 @@ package api
 import (
 	"context"
 	"fmt"
+	sentryhttp "github.com/getsentry/sentry-go/http"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/render"
+	"github.com/go-playground/validator/v10"
+	"github.com/gorilla/schema"
+	"github.com/rs/zerolog/log"
 	"net/http"
 	"os/signal"
+	"pthd-notifications/pkg/domain"
 	"syscall"
 	"time"
-
-	sentrygin "github.com/getsentry/sentry-go/gin"
-	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog/log"
-
-	"pthd-notifications/pkg/domain"
 )
 
 type Server struct {
@@ -20,36 +22,46 @@ type Server struct {
 	port  int
 	debug bool
 
-	service *domain.Service
+	service domain.IService
+
+	decoder   *schema.Decoder
+	validator *validator.Validate
 }
 
-func NewServer(host string, port int, debug bool, service *domain.Service) *Server {
+func NewServer(host string, port int, debug bool, service domain.IService) *Server {
 	return &Server{
 		port:    port,
 		host:    host,
 		service: service,
 		debug:   debug,
+
+		decoder:   initializeDecoder(),
+		validator: initializeValidator(),
 	}
 }
 
-func (s *Server) prepareRouter() *gin.Engine {
-	if s.debug {
-		gin.SetMode(gin.DebugMode)
-	} else {
-		gin.SetMode(gin.ReleaseMode)
-	}
+func (s *Server) prepareRouter() http.Handler {
+	s.decoder = initializeDecoder()
+	s.validator = initializeValidator()
 
-	r := gin.Default()
-	r.Use(sentrygin.New(sentrygin.Options{}))
-
-	r.GET("/healthcheck", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"status": "ok",
-		})
+	sentryMiddleware := sentryhttp.New(sentryhttp.Options{
+		Repanic: true,
 	})
 
-	notificationsHndlr := notificationHandler{service: s.service}
-	r.GET("/api/v1/notification", notificationsHndlr.Handle)
+	r := chi.NewRouter()
+	r.Use(middleware.RequestID)
+	r.Use(loggerMiddleware(&log.Logger))
+	r.Use(middleware.Recoverer)
+	r.Use(sentryMiddleware.Handle)
+	r.Use(render.SetContentType(render.ContentTypeJSON))
+
+	r.Get("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
+		render.Status(r, http.StatusOK)
+	})
+
+	notificationsHandler := newNotificationHandler(s.service, s.decoder, s.validator)
+
+	r.Get("/api/v1/notification", notificationsHandler.Handle)
 
 	return r
 }
