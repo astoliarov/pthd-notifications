@@ -2,6 +2,7 @@ package chi_api
 
 import (
 	"errors"
+	"github.com/getsentry/sentry-go"
 	"github.com/go-chi/render"
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/schema"
@@ -25,6 +26,8 @@ func newNotificationHandler(service domain.IService, decoder *schema.Decoder, va
 }
 
 func (handler *notificationHandler) Handle(w http.ResponseWriter, r *http.Request) {
+	hub := sentry.GetHubFromContext(r.Context())
+
 	notificationContext, validationErr := handler.parser.parse(r)
 	if validationErr != nil {
 		var validationErrors validator.ValidationErrors
@@ -40,6 +43,7 @@ func (handler *notificationHandler) Handle(w http.ResponseWriter, r *http.Reques
 			errs := map[string]interface{}{"type": "unsupported type"}
 			renderError(w, r, validationErr, "validation error", errs, http.StatusBadRequest)
 		default:
+			hub.CaptureException(validationErr)
 			renderError(w, r, validationErr, "internal server error", map[string]interface{}{}, http.StatusInternalServerError)
 		}
 		return
@@ -58,7 +62,8 @@ func (handler *notificationHandler) Handle(w http.ResponseWriter, r *http.Reques
 			errs := map[string]interface{}{"message": "no message for such parameters"}
 			renderError(w, r, sendErr, "send error", errs, http.StatusBadRequest)
 		default:
-			renderError(w, r, sendErr, "send error", map[string]interface{}{}, http.StatusInternalServerError)
+			hub.CaptureException(validationErr)
+			renderError(w, r, sendErr, "internal server error", map[string]interface{}{}, http.StatusInternalServerError)
 		}
 		return
 	}

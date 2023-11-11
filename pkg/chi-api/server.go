@@ -3,6 +3,7 @@ package chi_api
 import (
 	"context"
 	"fmt"
+	sentryhttp "github.com/getsentry/sentry-go/http"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
@@ -43,10 +44,15 @@ func (s *Server) prepareRouter() http.Handler {
 	s.decoder = initializeDecoder()
 	s.validator = initializeValidator()
 
+	sentryMiddleware := sentryhttp.New(sentryhttp.Options{
+		Repanic: true,
+	})
+
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
-	r.Use(middleware.Logger)
+	r.Use(loggerMiddleware(&log.Logger))
 	r.Use(middleware.Recoverer)
+	r.Use(sentryMiddleware.Handle)
 	r.Use(render.SetContentType(render.ContentTypeJSON))
 
 	r.Get("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
