@@ -20,5 +20,7 @@ func initializeValidator() *validator.Validate {
 }
 
 func initializeDecoder() *schema.Decoder {
-	return schema.NewDecoder()
+	decoder := schema.NewDecoder()
+	decoder.IgnoreUnknownKeys(true)
+	return decoder
 }

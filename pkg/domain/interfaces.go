@@ -14,3 +14,8 @@ type INotificationsRepo interface {
 type IConnector interface {
 	Send(notification *model.Notification) error
 }
+
+//go:generate mockgen -destination=../../tests/mocks/domain/iservice_mock.go -package=mocks pthd-notifications/pkg/domain IService
+type IService interface {
+	SendNotification(notificationContext model.INotificationContext) error
+}

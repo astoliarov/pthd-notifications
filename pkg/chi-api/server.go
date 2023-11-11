@@ -21,18 +21,21 @@ type Server struct {
 	port  int
 	debug bool
 
-	service *domain.Service
+	service domain.IService
 
 	decoder   *schema.Decoder
 	validator *validator.Validate
 }
 
-func NewServer(host string, port int, debug bool, service *domain.Service) *Server {
+func NewServer(host string, port int, debug bool, service domain.IService) *Server {
 	return &Server{
 		port:    port,
 		host:    host,
 		service: service,
 		debug:   debug,
+
+		decoder:   initializeDecoder(),
+		validator: initializeValidator(),
 	}
 }
 

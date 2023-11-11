@@ -1,6 +1,7 @@
 package chi_api
 
 import (
+	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/schema"
 	"net/http"
@@ -29,8 +30,8 @@ func (np *usersConnectedNotificationContext) toContext() model.INotificationCont
 }
 
 type usersLeftChannelNotificationContext struct {
-	DiscordId int64  `schema:"discord_id" validate:"discord_id,required" json:"discord_id"`
-	Type      string `schema:"type" validate:"type,required" json:"type"`
+	DiscordId int64  `schema:"discord_id" validate:"required" json:"discord_id"`
+	Type      string `schema:"type" validate:"required" json:"type"`
 }
 
 func (np *usersLeftChannelNotificationContext) toContext() model.INotificationContext {
@@ -86,12 +87,12 @@ func (p *notificationContextParser) decodeAndValidate(
 ) error {
 	decodeErr := p.decoder.Decode(notificationContext, r.URL.Query())
 	if decodeErr != nil {
-		return decodeErr
+		return fmt.Errorf("decode: %w", decodeErr)
 	}
 
 	validateErr := p.validator.Struct(notificationContext)
 	if validateErr != nil {
-		return validateErr
+		return fmt.Errorf("validation: %w", validateErr)
 	}
 
 	return nil
